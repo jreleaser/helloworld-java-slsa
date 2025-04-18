@@ -1,0 +1,67 @@
+hooks:
+  script:
+    before:
+      - run: './mvnw -ntp verify'
+        condition: '"{{ Env.CI }}" == true'
+        verbose: true
+        filter:
+          includes: ['assemble']
+
+project:
+  name: helloworld
+  description: HelloWorld in Java
+  links:
+    homepage: https://github.com/jreleaser/helloworld-java-slsa
+  authors:
+    - Andres Almiray
+  license: Apache-2.0
+  inceptionYear: 2024
+  stereotype: CLI
+  vendor: JReleaser
+  languages:
+    java:
+      version: 11
+      groupId: org.jreleaser.examples
+      artifactId: helloworld
+      mainClass: org.jreleaser.examples.HelloWorld
+
+release:
+  github:
+    overwrite: true
+    changelog:
+      formatted: ALWAYS
+      preset: conventional-commits
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
+
+assemble:
+  javaArchive:
+    helloworld:
+      active: ALWAYS
+      formats: [ ZIP ]
+      fileSets:
+        - input: '.'
+          includes: [ 'LICENSE' ]
+      artifacts:
+        - path: 'target/bom.xml'
+          transform: '{{projectName}}-{{projectVersion}}-cyclonedx.xml'
+      mainJar:
+        path: target/{{distributionName}}-{{projectVersion}}.jar
+      jars:
+        - pattern: target/repositories/universal/*.jar
+      swid:
+        tagRef: swid-tag
+
+catalog:
+  sbom:
+    syft:
+      active: ALWAYS
+      distributions: true
+      version: 1.22.0
+      formats:
+        - CYCLONEDX_XML
+
+catalog:
+  swid:
+    swid-tag:
+      active: ALWAYS
